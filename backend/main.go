@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/matthewaquino/timeline/internal/adapters"
-	"github.com/matthewaquino/timeline/internal/api"
-	"github.com/matthewaquino/timeline/internal/models"
-	"github.com/matthewaquino/timeline/internal/scheduler"
-	"github.com/matthewaquino/timeline/internal/store"
-	"github.com/matthewaquino/timeline/internal/topic"
+	"github.com/maquino96/timeline/internal/adapters"
+	"github.com/maquino96/timeline/internal/api"
+	"github.com/maquino96/timeline/internal/models"
+	"github.com/maquino96/timeline/internal/scheduler"
+	"github.com/maquino96/timeline/internal/store"
+	"github.com/maquino96/timeline/internal/topic"
 )
 
 func main() {

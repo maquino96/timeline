@@ -1,4 +1,4 @@
-module github.com/matthewaquino/timeline
+module github.com/maquino96/timeline
 
 go 1.26.4
 

@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/matthewaquino/timeline/internal/adapters"
-	"github.com/matthewaquino/timeline/internal/models"
-	"github.com/matthewaquino/timeline/internal/store"
-	"github.com/matthewaquino/timeline/internal/topic"
+	"github.com/maquino96/timeline/internal/adapters"
+	"github.com/maquino96/timeline/internal/models"
+	"github.com/maquino96/timeline/internal/store"
+	"github.com/maquino96/timeline/internal/topic"
 )
 
 const domainMinInterval = 10 * time.Second

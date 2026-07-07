@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/matthewaquino/timeline/internal/models"
+	"github.com/maquino96/timeline/internal/models"
 )
 
 type RSSAdapter struct {

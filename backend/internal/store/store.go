@@ -7,7 +7,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/matthewaquino/timeline/internal/models"
+	"github.com/maquino96/timeline/internal/models"
 )
 
 type Store struct {

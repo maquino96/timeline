@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/matthewaquino/timeline/internal/models"
-	"github.com/matthewaquino/timeline/internal/scheduler"
-	"github.com/matthewaquino/timeline/internal/store"
+	"github.com/maquino96/timeline/internal/models"
+	"github.com/maquino96/timeline/internal/scheduler"
+	"github.com/maquino96/timeline/internal/store"
 )
 
 type API struct {

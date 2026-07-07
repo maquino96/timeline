@@ -3,7 +3,7 @@ package topic
 import (
 	"strings"
 
-	"github.com/matthewaquino/timeline/internal/models"
+	"github.com/maquino96/timeline/internal/models"
 )
 
 type Engine struct{}
