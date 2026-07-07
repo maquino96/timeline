@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getItems, getSources, getTopics, type Item, type Source, type Topic } from "@/lib/api";
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -44,11 +44,15 @@ export default function Home() {
   const [totalCount, setTotalCount] = useState(0);
   const [offset, setOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
+  const isFirstLoad = useRef(true);
 
   const fetchData = useCallback(async (currentOffset: number = 0) => {
     try {
-      if (currentOffset === 0) setInitialLoading(true);
-      else setLoadingMore(true);
+      if (currentOffset === 0 && isFirstLoad.current) {
+        setInitialLoading(true);
+      } else if (currentOffset !== 0) {
+        setLoadingMore(true);
+      }
 
       const sourcesData = await getSources();
       const topicsData = await getTopics();
@@ -88,14 +92,17 @@ export default function Home() {
     } catch (err) {
       console.error(err);
     } finally {
-      setInitialLoading(false);
+      if (isFirstLoad.current) {
+        setInitialLoading(false);
+        isFirstLoad.current = false;
+      }
       setLoadingMore(false);
     }
   }, [selectedSources, selectedTopic]);
 
   useEffect(() => {
     fetchData(0);
-    const interval = setInterval(() => fetchData(0), 15000);
+    const interval = setInterval(() => fetchData(0), 30000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
