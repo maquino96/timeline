@@ -17,7 +17,7 @@ FROM alpine:3.21
 RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 COPY --from=backend-builder /src/backend/timeline-server .
-COPY --from=backend-builder /src/frontend/out ./frontend/out
+COPY --from=backend-builder /src/frontend/out /frontend/out
 
 EXPOSE 8080
 CMD ["./timeline-server"]
