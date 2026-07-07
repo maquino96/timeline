@@ -46,36 +46,45 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const isFirstLoad = useRef(true);
 
-  const fetchData = useCallback(async (currentOffset: number = 0) => {
+  const loadConfig = useCallback(async () => {
     try {
-      if (currentOffset === 0 && isFirstLoad.current) {
-        setInitialLoading(true);
-      } else if (currentOffset !== 0) {
-        setLoadingMore(true);
-      }
-
-      const sourcesData = await getSources();
-      const topicsData = await getTopics();
+      const [sourcesData, topicsData] = await Promise.all([getSources(), getTopics()]);
       setSources(sourcesData);
       setTopics(topicsData);
+      return { sourcesData, topicsData };
+    } catch (err) {
+      console.error(err);
+      return { sourcesData: null, topicsData: null };
+    }
+  }, []);
 
-      let sourceId: number | undefined;
-      let sourceType: string | undefined;
-      const limit = 50;
+  const resolveQuery = useCallback((sourcesData: Source[] | null) => {
+    let sourceId: number | undefined;
+    let sourceType: string | undefined;
 
-      if (selectedSources.size === 1) {
-        sourceId = [...selectedSources][0];
-      } else if (selectedSources.size > 1) {
-        const types = new Set(
-          sourcesData.filter((s) => selectedSources.has(s.id)).map((s) => s.type)
-        );
-        if (types.size === 1) {
-          sourceType = [...types][0];
-        }
+    if (!sourcesData) return { sourceId, sourceType };
+
+    if (selectedSources.size === 1) {
+      sourceId = [...selectedSources][0];
+    } else if (selectedSources.size > 1) {
+      const types = new Set(
+        sourcesData.filter((s) => selectedSources.has(s.id)).map((s) => s.type)
+      );
+      if (types.size === 1) {
+        sourceType = [...types][0];
       }
+    }
+    return { sourceId, sourceType };
+  }, [selectedSources]);
+
+  const fetchItems = useCallback(async (currentOffset: number = 0, sourcesData: Source[] | null = null) => {
+    try {
+      if (currentOffset !== 0) setLoadingMore(true);
+
+      const { sourceId, sourceType } = resolveQuery(sourcesData);
 
       const result = await getItems({
-        limit,
+        limit: 50,
         offset: currentOffset,
         source_id: sourceId,
         source_type: sourceType,
@@ -92,13 +101,21 @@ export default function Home() {
     } catch (err) {
       console.error(err);
     } finally {
-      if (isFirstLoad.current) {
-        setInitialLoading(false);
-        isFirstLoad.current = false;
-      }
       setLoadingMore(false);
     }
-  }, [selectedSources, selectedTopic]);
+  }, [selectedTopic, resolveQuery]);
+
+  const fetchData = useCallback(async (currentOffset: number = 0) => {
+    if (currentOffset === 0 && isFirstLoad.current) {
+      setInitialLoading(true);
+      const { sourcesData } = await loadConfig();
+      await fetchItems(0, sourcesData);
+      setInitialLoading(false);
+      isFirstLoad.current = false;
+    } else {
+      await fetchItems(currentOffset);
+    }
+  }, [loadConfig, fetchItems]);
 
   useEffect(() => {
     fetchData(0);
