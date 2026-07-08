@@ -96,11 +96,7 @@ func seedSources(s *store.Store) {
 
 	defaults := []models.Source{
 		{Type: models.SourceHackerNews, Name: "Hacker News", URL: "topstories", Interval: 300, Enabled: true},
-		{Type: models.SourceRSS, Name: "r/dev", URL: "https://www.reddit.com/r/programming+ExperiencedDevs+SoftwareEngineering/new/.rss", Interval: 300, Enabled: true},
-		{Type: models.SourceRSS, Name: "r/startups", URL: "https://www.reddit.com/r/startups+ycombinator/new/.rss", Interval: 300, Enabled: true},
-		{Type: models.SourceRSS, Name: "r/tech", URL: "https://www.reddit.com/r/selfhosted+homelab+deepseek/new/.rss", Interval: 300, Enabled: true},
-		{Type: models.SourceRSS, Name: "r/AI", URL: "https://www.reddit.com/r/Anthropic+OpenAI/new/.rss", Interval: 300, Enabled: true},
-		{Type: models.SourceRSS, Name: "r/lifestyle", URL: "https://www.reddit.com/r/digitalnomad+buildapcsales/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "Reddit", URL: "https://www.reddit.com/r/programming+ExperiencedDevs+SoftwareEngineering+startups+ycombinator+selfhosted+homelab+deepseek+Anthropic+OpenAI+digitalnomad+buildapcsales/new/.rss", Interval: 300, Enabled: true},
 		{Type: models.SourceSECEDGAR, Name: "FDGRX - Fidelity Growth Company Fund (316200104)", URL: "0000707823", Interval: 21600, Enabled: true},
 	}
 
