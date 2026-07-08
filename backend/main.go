@@ -96,7 +96,18 @@ func seedSources(s *store.Store) {
 
 	defaults := []models.Source{
 		{Type: models.SourceHackerNews, Name: "Hacker News", URL: "topstories", Interval: 300, Enabled: true},
-		{Type: models.SourceRSS, Name: "Reddit", URL: "https://www.reddit.com/r/programming+ExperiencedDevs+SoftwareEngineering+startups+ycombinator+selfhosted+homelab+deepseek+Anthropic+OpenAI+digitalnomad+buildapcsales/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/programming", URL: "https://www.reddit.com/r/programming/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/ExperiencedDevs", URL: "https://www.reddit.com/r/ExperiencedDevs/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/SoftwareEngineering", URL: "https://www.reddit.com/r/SoftwareEngineering/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/startups", URL: "https://www.reddit.com/r/startups/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/digitalnomad", URL: "https://www.reddit.com/r/digitalnomad/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/deepseek", URL: "https://www.reddit.com/r/deepseek/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/selfhosted", URL: "https://www.reddit.com/r/selfhosted/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/homelab", URL: "https://www.reddit.com/r/homelab/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/ycombinator", URL: "https://www.reddit.com/r/ycombinator/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/buildapcsales", URL: "https://www.reddit.com/r/buildapcsales/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/Anthropic", URL: "https://www.reddit.com/r/Anthropic/new/.rss", Interval: 300, Enabled: true},
+		{Type: models.SourceRSS, Name: "r/OpenAI", URL: "https://www.reddit.com/r/OpenAI/new/.rss", Interval: 300, Enabled: true},
 		{Type: models.SourceSECEDGAR, Name: "FDGRX - Fidelity Growth Company Fund (316200104)", URL: "0000707823", Interval: 21600, Enabled: true},
 	}
 
