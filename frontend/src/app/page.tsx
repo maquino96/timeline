@@ -146,6 +146,16 @@ export default function Home() {
 
   const toggleSource = (id: number) => {
     setSelectedSources((prev) => {
+      const isReddit = redditSourceIDs.includes(id);
+      const allRedditSelected = redditSourceIDs.every((rid) => prev.has(rid));
+
+      if (isReddit && allRedditSelected) {
+        const next = new Set(prev);
+        redditSourceIDs.forEach((rid) => next.delete(rid));
+        next.add(id);
+        return next;
+      }
+
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
