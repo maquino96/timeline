@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/maquino96/timeline/internal/models"
 	"github.com/maquino96/timeline/internal/scheduler"
@@ -36,10 +37,20 @@ func (a *API) RegisterRoutes(mux *http.ServeMux) {
 func (a *API) handleGetItems(w http.ResponseWriter, r *http.Request) {
 	limit := queryInt(r, "limit", 50)
 	offset := queryInt(r, "offset", 0)
+	sourceIDRaw := r.URL.Query().Get("source_id")
 	sourceID := int64(queryInt(r, "source_id", 0))
 	topicID := int64(queryInt(r, "topic_id", 0))
 	sourceType := r.URL.Query().Get("source_type")
 	search := r.URL.Query().Get("q")
+
+	var sourceIDs []int64
+	if strings.Contains(sourceIDRaw, ",") {
+		for _, s := range strings.Split(sourceIDRaw, ",") {
+			if id, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64); err == nil && id > 0 {
+				sourceIDs = append(sourceIDs, id)
+			}
+		}
+	}
 
 	var items []models.Item
 	var err error
@@ -52,6 +63,9 @@ func (a *API) handleGetItems(w http.ResponseWriter, r *http.Request) {
 	case topicID > 0:
 		items, err = a.store.GetItemsByTopic(topicID, limit, offset)
 		total, _ = a.store.CountItemsByTopic(topicID)
+	case len(sourceIDs) > 1:
+		items, err = a.store.GetItemsBySources(sourceIDs, limit, offset)
+		total, _ = a.store.CountItemsBySources(sourceIDs)
 	case sourceID > 0:
 		items, err = a.store.GetItemsBySource(sourceID, limit, offset)
 		total, _ = a.store.CountItemsBySource(sourceID)

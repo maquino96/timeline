@@ -59,19 +59,30 @@ export default function Home() {
   }, []);
 
   const resolveQuery = useCallback(() => {
-    let sourceId: number | undefined;
+    let sourceId: number | string | undefined;
     let sourceType: string | undefined;
 
     if (sources.length === 0) return { sourceId, sourceType };
 
     if (selectedSources.size === 1) {
       sourceId = [...selectedSources][0];
-    } else if (selectedSources.size > 1) {
+      return { sourceId, sourceType };
+    }
+
+    if (selectedSources.size > 1) {
       const types = new Set(
         sources.filter((s) => selectedSources.has(s.id)).map((s) => s.type)
       );
       if (types.size === 1) {
-        sourceType = [...types][0];
+        const selectedType = [...types][0];
+        const allOfType = sources.filter((s) => s.type === selectedType).map((s) => s.id);
+        const allSelected = allOfType.every((id) => selectedSources.has(id));
+
+        if (allSelected) {
+          sourceType = selectedType;
+        } else {
+          sourceId = allOfType.filter((id) => selectedSources.has(id)).join(",");
+        }
       }
     }
     return { sourceId, sourceType };

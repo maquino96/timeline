@@ -45,7 +45,7 @@ async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
 export async function getItems(params: {
   limit?: number;
   offset?: number;
-  source_id?: number;
+  source_id?: number | string;
   source_type?: string;
   topic_id?: number;
   q?: string;

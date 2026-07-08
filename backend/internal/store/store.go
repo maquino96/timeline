@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -306,6 +307,48 @@ func (s *Store) GetItemsBySource(sourceID int64, limit, offset int) ([]models.It
 func (s *Store) CountItemsBySource(sourceID int64) (int, error) {
 	var count int
 	err := s.db.QueryRow(`SELECT COUNT(*) FROM items WHERE source_id = ?`, sourceID).Scan(&count)
+	return count, err
+}
+
+func (s *Store) GetItemsBySources(sourceIDs []int64, limit, offset int) ([]models.Item, error) {
+	if len(sourceIDs) == 0 {
+		return nil, nil
+	}
+	placeholders := make([]string, len(sourceIDs))
+	args := make([]interface{}, 0, len(sourceIDs)+2)
+	for i, id := range sourceIDs {
+		placeholders[i] = "?"
+		args = append(args, id)
+	}
+	args = append(args, limit, offset)
+
+	query := fmt.Sprintf(
+		`SELECT id, source_id, source_type, source_name, title, body, url, author, published_at, fetched_at, COALESCE(metadata, '{}')
+		 FROM items WHERE source_id IN (%s) ORDER BY published_at DESC LIMIT ? OFFSET ?`,
+		strings.Join(placeholders, ","),
+	)
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanItems(rows)
+}
+
+func (s *Store) CountItemsBySources(sourceIDs []int64) (int, error) {
+	if len(sourceIDs) == 0 {
+		return 0, nil
+	}
+	placeholders := make([]string, len(sourceIDs))
+	args := make([]interface{}, len(sourceIDs))
+	for i, id := range sourceIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM items WHERE source_id IN (%s)`, strings.Join(placeholders, ","))
+	var count int
+	err := s.db.QueryRow(query, args...).Scan(&count)
 	return count, err
 }
 
