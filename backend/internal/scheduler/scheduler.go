@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -14,8 +15,8 @@ import (
 	"github.com/maquino96/timeline/internal/topic"
 )
 
-const domainMinInterval = 30 * time.Second
-const rateLimitCooldown = 5 * time.Minute
+const domainMinInterval = 90 * time.Second
+const rateLimitCooldown = 10 * time.Minute
 
 type Scheduler struct {
 	store           *store.Store
@@ -70,6 +71,10 @@ func (sc *Scheduler) pollDue() {
 		log.Printf("scheduler: get sources: %v", err)
 		return
 	}
+
+	sort.Slice(sources, func(i, j int) bool {
+		return sc.lastPoll[sources[i].ID].Before(sc.lastPoll[sources[j].ID])
+	})
 
 	for _, src := range sources {
 		sc.mu.Lock()
