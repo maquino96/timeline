@@ -14,7 +14,7 @@ import (
 	"github.com/maquino96/timeline/internal/topic"
 )
 
-const domainMinInterval = 10 * time.Second
+const domainMinInterval = 30 * time.Second
 const rateLimitCooldown = 5 * time.Minute
 
 type Scheduler struct {
