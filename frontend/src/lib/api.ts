@@ -45,6 +45,7 @@ async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
 export async function getItems(params: {
   limit?: number;
   offset?: number;
+  since?: string;
   source_id?: number | string;
   source_type?: string;
   topic_id?: number;
@@ -53,6 +54,7 @@ export async function getItems(params: {
   const sp = new URLSearchParams();
   if (params.limit) sp.set("limit", String(params.limit));
   if (params.offset) sp.set("offset", String(params.offset));
+  if (params.since) sp.set("since", params.since);
   if (params.source_id) sp.set("source_id", String(params.source_id));
   if (params.source_type) sp.set("source_type", params.source_type);
   if (params.topic_id) sp.set("topic_id", String(params.topic_id));

@@ -76,6 +76,7 @@ func (s *Store) migrate() error {
 	CREATE INDEX IF NOT EXISTS idx_items_published_at ON items(published_at DESC);
 	CREATE INDEX IF NOT EXISTS idx_items_source_id ON items(source_id);
 	CREATE INDEX IF NOT EXISTS idx_items_source_type ON items(source_type);
+	CREATE INDEX IF NOT EXISTS idx_items_fetched_at ON items(fetched_at);
 
 	CREATE TABLE IF NOT EXISTS item_topics (
 		item_id TEXT NOT NULL,
@@ -395,6 +396,102 @@ func (s *Store) CountSearchItems(query string) (int, error) {
 		 WHERE items_fts MATCH ?`, query,
 	).Scan(&count)
 	return count, err
+}
+
+func (s *Store) GetItemsSince(since string, limit int) ([]models.Item, error) {
+	rows, err := s.db.Query(
+		`SELECT id, source_id, source_type, source_name, title, body, url, author, published_at, fetched_at, COALESCE(metadata, '{}')
+		 FROM items WHERE fetched_at > ? ORDER BY fetched_at ASC LIMIT ?`,
+		since, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanItems(rows)
+}
+
+func (s *Store) GetItemsSinceByTopic(topicID int64, since string, limit int) ([]models.Item, error) {
+	rows, err := s.db.Query(
+		`SELECT i.id, i.source_id, i.source_type, i.source_name, i.title, i.body, i.url, i.author, i.published_at, i.fetched_at, COALESCE(i.metadata, '{}')
+		 FROM items i
+		 JOIN item_topics it ON i.id = it.item_id
+		 WHERE it.topic_id = ? AND i.fetched_at > ?
+		 ORDER BY i.fetched_at ASC LIMIT ?`,
+		topicID, since, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanItems(rows)
+}
+
+func (s *Store) GetItemsSinceBySource(sourceID int64, since string, limit int) ([]models.Item, error) {
+	rows, err := s.db.Query(
+		`SELECT id, source_id, source_type, source_name, title, body, url, author, published_at, fetched_at, COALESCE(metadata, '{}')
+		 FROM items WHERE source_id = ? AND fetched_at > ? ORDER BY fetched_at ASC LIMIT ?`,
+		sourceID, since, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanItems(rows)
+}
+
+func (s *Store) GetItemsSinceBySources(sourceIDs []int64, since string, limit int) ([]models.Item, error) {
+	if len(sourceIDs) == 0 {
+		return nil, nil
+	}
+	placeholders := make([]string, len(sourceIDs))
+	args := make([]interface{}, 0, len(sourceIDs)+2)
+	for i, id := range sourceIDs {
+		placeholders[i] = "?"
+		args = append(args, id)
+	}
+	args = append(args, since, limit)
+
+	query := fmt.Sprintf(
+		`SELECT id, source_id, source_type, source_name, title, body, url, author, published_at, fetched_at, COALESCE(metadata, '{}')
+		 FROM items WHERE source_id IN (%s) AND fetched_at > ? ORDER BY fetched_at ASC LIMIT ?`,
+		strings.Join(placeholders, ","),
+	)
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanItems(rows)
+}
+
+func (s *Store) GetItemsSinceByType(sourceType string, since string, limit int) ([]models.Item, error) {
+	rows, err := s.db.Query(
+		`SELECT id, source_id, source_type, source_name, title, body, url, author, published_at, fetched_at, COALESCE(metadata, '{}')
+		 FROM items WHERE source_type = ? AND fetched_at > ? ORDER BY fetched_at ASC LIMIT ?`,
+		sourceType, since, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanItems(rows)
+}
+
+func (s *Store) SearchItemsSince(query string, since string, limit int) ([]models.Item, error) {
+	rows, err := s.db.Query(
+		`SELECT i.id, i.source_id, i.source_type, i.source_name, i.title, i.body, i.url, i.author, i.published_at, i.fetched_at, COALESCE(i.metadata, '{}')
+		 FROM items i
+		 JOIN items_fts fts ON i.rowid = fts.rowid
+		 WHERE items_fts MATCH ? AND i.fetched_at > ?
+		 ORDER BY i.fetched_at ASC LIMIT ?`,
+		query, since, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanItems(rows)
 }
 
 func parseSQLiteTime(s string) (time.Time, error) {

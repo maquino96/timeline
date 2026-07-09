@@ -37,6 +37,7 @@ func (a *API) RegisterRoutes(mux *http.ServeMux) {
 func (a *API) handleGetItems(w http.ResponseWriter, r *http.Request) {
 	limit := queryInt(r, "limit", 50)
 	offset := queryInt(r, "offset", 0)
+	since := r.URL.Query().Get("since")
 	sourceIDRaw := r.URL.Query().Get("source_id")
 	sourceID := int64(queryInt(r, "source_id", 0))
 	topicID := int64(queryInt(r, "topic_id", 0))
@@ -56,24 +57,50 @@ func (a *API) handleGetItems(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var total int
 
+	if since != "" {
+		switch {
+		case search != "":
+			items, err = a.store.SearchItemsSince(search, since, limit)
+		case topicID > 0:
+			items, err = a.store.GetItemsSinceByTopic(topicID, since, limit)
+		case len(sourceIDs) > 1:
+			items, err = a.store.GetItemsSinceBySources(sourceIDs, since, limit)
+		case sourceID > 0:
+			items, err = a.store.GetItemsSinceBySource(sourceID, since, limit)
+		case sourceType != "":
+			items, err = a.store.GetItemsSinceByType(sourceType, since, limit)
+		default:
+			items, err = a.store.GetItemsSince(since, limit)
+		}
+	} else {
+		switch {
+		case search != "":
+			items, err = a.store.SearchItems(search, limit, offset)
+		case topicID > 0:
+			items, err = a.store.GetItemsByTopic(topicID, limit, offset)
+		case len(sourceIDs) > 1:
+			items, err = a.store.GetItemsBySources(sourceIDs, limit, offset)
+		case sourceID > 0:
+			items, err = a.store.GetItemsBySource(sourceID, limit, offset)
+		case sourceType != "":
+			items, err = a.store.GetItemsByType(sourceType, limit, offset)
+		default:
+			items, err = a.store.GetItems(limit, offset)
+		}
+	}
+
 	switch {
 	case search != "":
-		items, err = a.store.SearchItems(search, limit, offset)
 		total, _ = a.store.CountSearchItems(search)
 	case topicID > 0:
-		items, err = a.store.GetItemsByTopic(topicID, limit, offset)
 		total, _ = a.store.CountItemsByTopic(topicID)
 	case len(sourceIDs) > 1:
-		items, err = a.store.GetItemsBySources(sourceIDs, limit, offset)
 		total, _ = a.store.CountItemsBySources(sourceIDs)
 	case sourceID > 0:
-		items, err = a.store.GetItemsBySource(sourceID, limit, offset)
 		total, _ = a.store.CountItemsBySource(sourceID)
 	case sourceType != "":
-		items, err = a.store.GetItemsByType(sourceType, limit, offset)
 		total, _ = a.store.CountItemsByType(sourceType)
 	default:
-		items, err = a.store.GetItems(limit, offset)
 		total, _ = a.store.CountItems()
 	}
 

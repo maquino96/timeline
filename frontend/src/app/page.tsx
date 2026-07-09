@@ -45,6 +45,7 @@ export default function Home() {
   const [offset, setOffset] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const isFirstLoad = useRef(true);
+  const newestFetchedAtRef = useRef<string>("");
 
   const loadConfig = useCallback(async () => {
     try {
@@ -88,27 +89,49 @@ export default function Home() {
     return { sourceId, sourceType };
   }, [selectedSources, sources]);
 
-  const fetchItems = useCallback(async (currentOffset: number = 0) => {
+  const fetchItems = useCallback(async (currentOffset: number = 0, useSince: boolean = false) => {
     try {
       if (currentOffset !== 0) setLoadingMore(true);
 
       const { sourceId, sourceType } = resolveQuery();
 
-      const result = await getItems({
-        limit: 50,
-        offset: currentOffset,
-        source_id: sourceId,
-        source_type: sourceType,
-        topic_id: selectedTopic || undefined,
-      });
+      if (useSince && newestFetchedAtRef.current) {
+        const result = await getItems({
+          limit: 50,
+          since: newestFetchedAtRef.current,
+          source_id: sourceId,
+          source_type: sourceType,
+          topic_id: selectedTopic || undefined,
+        });
 
-      if (currentOffset === 0) {
-        setItems(result.items);
+        if (result.items.length > 0) {
+          setItems((prev) => {
+            const existingIds = new Set(prev.map((i) => i.id));
+            const newItems = result.items.filter((i) => !existingIds.has(i.id));
+            if (newItems.length === 0) return prev;
+            return [...prev, ...newItems].sort(
+              (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+            );
+          });
+        }
+        setTotalCount(result.total);
       } else {
-        setItems((prev) => [...prev, ...result.items]);
+        const result = await getItems({
+          limit: 50,
+          offset: currentOffset,
+          source_id: sourceId,
+          source_type: sourceType,
+          topic_id: selectedTopic || undefined,
+        });
+
+        if (currentOffset === 0) {
+          setItems(result.items);
+        } else {
+          setItems((prev) => [...prev, ...result.items]);
+        }
+        setTotalCount(result.total);
+        setOffset(currentOffset + result.items.length);
       }
-      setTotalCount(result.total);
-      setOffset(currentOffset + result.items.length);
     } catch (err) {
       console.error(err);
     } finally {
@@ -116,23 +139,30 @@ export default function Home() {
     }
   }, [selectedTopic, resolveQuery]);
 
-  const fetchData = useCallback(async (currentOffset: number = 0) => {
+  const fetchData = useCallback(async (currentOffset: number = 0, isPoll: boolean = false) => {
     if (currentOffset === 0 && isFirstLoad.current) {
       setInitialLoading(true);
       await loadConfig();
-      await fetchItems(0);
+      await fetchItems(0, false);
       setInitialLoading(false);
       isFirstLoad.current = false;
     } else {
-      await fetchItems(currentOffset);
+      await fetchItems(currentOffset, isPoll);
     }
   }, [loadConfig, fetchItems]);
 
   useEffect(() => {
-    fetchData(0);
-    const interval = setInterval(() => fetchData(0), 30000);
+    fetchData(0, false);
+    const interval = setInterval(() => fetchData(0, true), 30000);
     return () => clearInterval(interval);
   }, [fetchData]);
+
+  useEffect(() => {
+    if (items.length > 0) {
+      const max = items.reduce((a, b) => (a.fetched_at > b.fetched_at ? a : b));
+      newestFetchedAtRef.current = max.fetched_at;
+    }
+  }, [items]);
 
   const enabledSources = sources.filter((s) => s.enabled);
   const redditSourceIDs = enabledSources
