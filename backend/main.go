@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/maquino96/timeline/internal/adapters"
 	"github.com/maquino96/timeline/internal/api"
@@ -46,6 +47,8 @@ func main() {
 	sch := scheduler.New(store, registry, engine)
 	sch.Start()
 	defer sch.Stop()
+
+	go cleanupLoop(store)
 
 	sources, _ := store.GetEnabledSources()
 	for _, src := range sources {
@@ -113,5 +116,17 @@ func seedSources(s *store.Store) {
 
 	for i := range defaults {
 		s.AddSource(&defaults[i])
+	}
+}
+
+func cleanupLoop(s *store.Store) {
+	for {
+		time.Sleep(1 * time.Hour)
+		deleted, err := s.CleanupOldItems()
+		if err != nil {
+			log.Printf("cleanup: %v", err)
+		} else if deleted > 0 {
+			log.Printf("cleanup: removed %d old items", deleted)
+		}
 	}
 }

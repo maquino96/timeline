@@ -494,6 +494,47 @@ func (s *Store) SearchItemsSince(query string, since string, limit int) ([]model
 	return scanItems(rows)
 }
 
+func (s *Store) CleanupOldItems() (int, error) {
+	total := 0
+
+	defaultCutoff := time.Now().Add(-7 * 24 * time.Hour).Format(time.RFC3339)
+	res, err := s.db.Exec(
+		`DELETE FROM items WHERE source_type != ? AND fetched_at < ?`,
+		models.SourceSECEDGAR, defaultCutoff,
+	)
+	if err != nil {
+		return total, err
+	}
+	n, _ := res.RowsAffected()
+	total += int(n)
+
+	edgarCutoff := time.Now().Add(-365 * 24 * time.Hour).Format(time.RFC3339)
+	res, err = s.db.Exec(
+		`DELETE FROM items WHERE source_type = ? AND fetched_at < ?`,
+		models.SourceSECEDGAR, edgarCutoff,
+	)
+	if err != nil {
+		return total, err
+	}
+	n, _ = res.RowsAffected()
+	total += int(n)
+
+	s.db.Exec(`DELETE FROM item_topics WHERE item_id NOT IN (SELECT id FROM items)`)
+
+	var count int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM items`).Scan(&count); err != nil {
+		return total, err
+	}
+	if count > 10000 {
+		excess := count - 10000
+		s.db.Exec(`DELETE FROM items WHERE id IN (SELECT id FROM items ORDER BY fetched_at ASC LIMIT ?)`, excess)
+		total += excess
+		s.db.Exec(`DELETE FROM item_topics WHERE item_id NOT IN (SELECT id FROM items)`)
+	}
+
+	return total, nil
+}
+
 func parseSQLiteTime(s string) (time.Time, error) {
 	formats := []string{
 		"2006-01-02 15:04:05",
