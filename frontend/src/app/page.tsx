@@ -84,6 +84,8 @@ export default function Home() {
         } else {
           sourceId = allOfType.filter((id) => selectedSources.has(id)).join(",");
         }
+      } else {
+        sourceId = [...selectedSources].join(",");
       }
     }
     return { sourceId, sourceType };
