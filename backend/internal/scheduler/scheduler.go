@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"fmt"
 	"log"
 	"net/url"
 	"sort"
@@ -147,8 +146,8 @@ func (sc *Scheduler) fetchSource(source models.Source) {
 		}
 	}
 
-	if source.Type == models.SourceHackerNews {
-		fmt.Printf("HN Source Updated at %s\n", time.Now().Format("15:04:05"))
+	if len(items) > 0 {
+		log.Printf("scheduler: fetched %d items from %s (%s)", len(items), source.Name, source.Type)
 	}
 }
 
