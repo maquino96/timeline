@@ -253,7 +253,7 @@ export default function Home() {
     }`;
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-6">
+    <div className="max-w-2xl mx-auto py-6 px-4 md:py-8 md:px-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
           {selectedTopic
@@ -317,7 +317,7 @@ export default function Home() {
             )}
           </div>
           {showRedditPills && (
-            <div className="flex flex-wrap gap-2.5 max-h-[12rem] overflow-y-auto p-1 -mx-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+            <div className="flex flex-wrap gap-2.5 max-h-[16rem] overflow-y-auto pt-1 pb-2 px-1 -mx-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
               {redditSources.map((source) => (
                 <button
                   key={source.id}

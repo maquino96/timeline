@@ -47,14 +47,14 @@ export default function SourcesPage() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto py-8 px-6">
+      <div className="max-w-2xl mx-auto py-6 px-4 md:py-8 md:px-6">
         <p className="text-zinc-500">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-6">
+    <div className="max-w-2xl mx-auto py-6 px-4 md:py-8 md:px-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">Sources</h2>
         <button
