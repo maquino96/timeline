@@ -6,31 +6,60 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "Feed" },
+  { href: "/sales", label: "Sales" },
+];
+
+const SETTINGS_LINKS = [
   { href: "/sources", label: "Sources" },
   { href: "/topics", label: "Topics" },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const onSettingsRoute = SETTINGS_LINKS.some((l) => l.href === pathname);
+  const [settingsOpen, setSettingsOpen] = useState(onSettingsRoute);
+
+  const renderLink = ({ href, label }: { href: string; label: string }) => {
+    const active = pathname === href;
+    return (
+      <Link
+        key={href}
+        href={href}
+        onClick={onNavigate}
+        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+          active
+            ? "bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+            : "text-zinc-600 hover:bg-zinc-200 dark:text-zinc-400 dark:hover:bg-zinc-800"
+        }`}
+      >
+        {label}
+      </Link>
+    );
+  };
   return (
     <>
-      {LINKS.map(({ href, label }) => {
-        const active = pathname === href;
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              active
-                ? "bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                : "text-zinc-600 hover:bg-zinc-200 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            }`}
-          >
-            {label}
-          </Link>
-        );
-      })}
+      {LINKS.map(renderLink)}
+      <button
+        onClick={() => setSettingsOpen((o) => !o)}
+        aria-expanded={settingsOpen}
+        className="mt-4 flex items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors"
+      >
+        <span>Settings</span>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`transition-transform ${settingsOpen ? "rotate-90" : ""}`}
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+      {settingsOpen && <div className="flex flex-col gap-2 mt-1">{SETTINGS_LINKS.map(renderLink)}</div>}
     </>
   );
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/maquino96/timeline/internal/adapters"
 	"github.com/maquino96/timeline/internal/api"
 	"github.com/maquino96/timeline/internal/models"
+	"github.com/maquino96/timeline/internal/sales"
 	"github.com/maquino96/timeline/internal/scheduler"
 	"github.com/maquino96/timeline/internal/store"
 	"github.com/maquino96/timeline/internal/topic"
@@ -49,6 +50,7 @@ func main() {
 	defer sch.Stop()
 
 	go cleanupLoop(store)
+	go salesCheckLoop(store)
 
 	sources, _ := store.GetEnabledSources()
 	for _, src := range sources {
@@ -128,5 +130,14 @@ func cleanupLoop(s *store.Store) {
 		} else if deleted > 0 {
 			log.Printf("cleanup: removed %d old items", deleted)
 		}
+	}
+}
+
+func salesCheckLoop(s *store.Store) {
+	time.Sleep(30 * time.Second)
+	sales.CheckAll(s)
+	for {
+		time.Sleep(1 * time.Hour)
+		sales.CheckAll(s)
 	}
 }

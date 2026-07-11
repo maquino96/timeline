@@ -24,14 +24,25 @@ func New(s *store.Store, sc *scheduler.Scheduler) *API {
 func (a *API) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/items", a.handleGetItems)
 	mux.HandleFunc("GET /api/sources", a.handleGetSources)
-	mux.HandleFunc("POST /api/sources", a.handleCreateSource)
-	mux.HandleFunc("PUT /api/sources/{id}", a.handleUpdateSource)
-	mux.HandleFunc("DELETE /api/sources/{id}", a.handleDeleteSource)
-	mux.HandleFunc("POST /api/sources/{id}/poll", a.handlePollSource)
+	mux.HandleFunc("POST /api/sources", a.requireAuth(a.handleCreateSource))
+	mux.HandleFunc("PUT /api/sources/{id}", a.requireAuth(a.handleUpdateSource))
+	mux.HandleFunc("DELETE /api/sources/{id}", a.requireAuth(a.handleDeleteSource))
+	mux.HandleFunc("POST /api/sources/{id}/poll", a.requireAuth(a.handlePollSource))
 	mux.HandleFunc("GET /api/topics", a.handleGetTopics)
-	mux.HandleFunc("POST /api/topics", a.handleCreateTopic)
-	mux.HandleFunc("PUT /api/topics/{id}", a.handleUpdateTopic)
-	mux.HandleFunc("DELETE /api/topics/{id}", a.handleDeleteTopic)
+	mux.HandleFunc("POST /api/topics", a.requireAuth(a.handleCreateTopic))
+	mux.HandleFunc("PUT /api/topics/{id}", a.requireAuth(a.handleUpdateTopic))
+	mux.HandleFunc("DELETE /api/topics/{id}", a.requireAuth(a.handleDeleteTopic))
+
+	mux.HandleFunc("POST /api/login", a.handleLogin)
+	mux.HandleFunc("POST /api/logout", a.handleLogout)
+	mux.HandleFunc("GET /api/auth", a.handleAuthStatus)
+
+	mux.HandleFunc("GET /api/sales/items", a.handleGetWatchItems)
+	mux.HandleFunc("POST /api/sales/items", a.requireAuth(a.handleCreateWatchItem))
+	mux.HandleFunc("PUT /api/sales/items/{id}", a.requireAuth(a.handleUpdateWatchItem))
+	mux.HandleFunc("DELETE /api/sales/items/{id}", a.requireAuth(a.handleDeleteWatchItem))
+	mux.HandleFunc("GET /api/sales/alerts", a.handleGetSaleAlerts)
+	mux.HandleFunc("POST /api/sales/alerts/{id}/dismiss", a.requireAuth(a.handleDismissSaleAlert))
 }
 
 func (a *API) handleGetItems(w http.ResponseWriter, r *http.Request) {
@@ -245,6 +256,14 @@ func writeJSON(w http.ResponseWriter, status int, v interface{}) {
 	json.NewEncoder(w).Encode(zeroSlice(v))
 }
 
+func decodeJSON(r *http.Request, v interface{}) error {
+	return json.NewDecoder(r.Body).Decode(v)
+}
+
+func itoaHeader(n int) string {
+	return fmt.Sprintf("%d", n)
+}
+
 func zeroSlice(v interface{}) interface{} {
 	switch t := v.(type) {
 	case []models.Item:
@@ -258,6 +277,14 @@ func zeroSlice(v interface{}) interface{} {
 	case []models.Topic:
 		if t == nil {
 			return []models.Topic{}
+		}
+	case []models.WatchItem:
+		if t == nil {
+			return []models.WatchItem{}
+		}
+	case []models.SaleAlert:
+		if t == nil {
+			return []models.SaleAlert{}
 		}
 	}
 	return v

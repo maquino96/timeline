@@ -32,8 +32,37 @@ export interface Topic {
   created_at: string;
 }
 
+export interface WatchItem {
+  id: number;
+  name: string;
+  search_term: string;
+  threshold: number;
+  floor: number;
+  category: string;
+  active: boolean;
+  ebay_price: number | null;
+  slickdeals_price: number | null;
+  reddit_price: number | null;
+  last_checked: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SaleAlert {
+  id: number;
+  item_id: number;
+  item_name: string;
+  price: number;
+  title: string;
+  deal_url: string;
+  source: string;
+  sent: boolean;
+  dismissed: boolean;
+  created_at: string;
+}
+
 async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, options);
+  const res = await fetch(`${API_BASE}${path}`, { credentials: "include", ...options });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || `HTTP ${res.status}`);
@@ -120,4 +149,63 @@ export function updateTopic(id: number, topic: Partial<Topic>): Promise<Topic> {
 
 export function deleteTopic(id: number): Promise<void> {
   return fetchJSON<void>(`/api/topics/${id}`, { method: "DELETE" });
+}
+
+export interface AuthStatus {
+  authenticated: boolean;
+  auth_required: boolean;
+}
+
+export function getAuthStatus(): Promise<AuthStatus> {
+  return fetchJSON<AuthStatus>("/api/auth");
+}
+
+export function login(password: string): Promise<{ authenticated: boolean }> {
+  return fetchJSON("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+}
+
+export function logout(): Promise<{ authenticated: boolean }> {
+  return fetchJSON("/api/logout", { method: "POST" });
+}
+
+export function getWatchItems(): Promise<WatchItem[]> {
+  return fetchJSON<WatchItem[]>("/api/sales/items");
+}
+
+export function createWatchItem(item: Partial<WatchItem>): Promise<WatchItem> {
+  return fetchJSON<WatchItem>("/api/sales/items", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(item),
+  });
+}
+
+export function updateWatchItem(id: number, item: Partial<WatchItem>): Promise<WatchItem> {
+  return fetchJSON<WatchItem>(`/api/sales/items/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(item),
+  });
+}
+
+export function deleteWatchItem(id: number): Promise<void> {
+  return fetchJSON<void>(`/api/sales/items/${id}`, { method: "DELETE" });
+}
+
+export async function getSaleAlerts(limit = 25, offset = 0): Promise<{ alerts: SaleAlert[]; total: number }> {
+  const res = await fetch(`${API_BASE}/api/sales/alerts?limit=${limit}&offset=${offset}`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const alerts = await res.json();
+  const total = parseInt(res.headers.get("X-Total-Count") || "0", 10);
+  return { alerts, total };
+}
+
+export function dismissSaleAlert(id: number): Promise<void> {
+  return fetchJSON<void>(`/api/sales/alerts/${id}/dismiss`, { method: "POST" });
 }

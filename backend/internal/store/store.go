@@ -97,6 +97,37 @@ func (s *Store) migrate() error {
 	CREATE TRIGGER IF NOT EXISTS items_ad AFTER DELETE ON items BEGIN
 		INSERT INTO items_fts(items_fts, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
 	END;
+
+	CREATE TABLE IF NOT EXISTS watch_items (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		search_term TEXT NOT NULL,
+		threshold REAL NOT NULL,
+		floor REAL NOT NULL DEFAULT 0,
+		category TEXT NOT NULL DEFAULT '',
+		active INTEGER NOT NULL DEFAULT 1,
+		ebay_price REAL,
+		slickdeals_price REAL,
+		reddit_price REAL,
+		last_checked TEXT,
+		created_at TEXT NOT NULL DEFAULT (datetime('now')),
+		updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+	);
+
+	CREATE TABLE IF NOT EXISTS sale_alerts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		item_id INTEGER NOT NULL REFERENCES watch_items(id),
+		price REAL NOT NULL,
+		title TEXT NOT NULL DEFAULT '',
+		deal_url TEXT NOT NULL DEFAULT '',
+		source TEXT NOT NULL DEFAULT '',
+		sent INTEGER NOT NULL DEFAULT 0,
+		dismissed INTEGER NOT NULL DEFAULT 0,
+		created_at TEXT NOT NULL DEFAULT (datetime('now'))
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_sale_alerts_item ON sale_alerts(item_id);
+	CREATE INDEX IF NOT EXISTS idx_sale_alerts_created ON sale_alerts(created_at);
 	`
 	_, err := s.db.Exec(schema)
 	return err
